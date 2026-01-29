@@ -1,6 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 
+export interface EmployeeMetrics {
+    id: string;
+    name: string;
+    email: string;
+    totalHours: number;
+    expectedHours: number;
+    completionPercentage: number;
+    isComplete: boolean;
+}
+
 export interface AggregatedMetrics {
     period: {
         start: string;
@@ -22,14 +32,8 @@ export interface AggregatedMetrics {
         description: string;
         totalHours: number;
     }[];
-    incompleteEmployeesList: {
-        id: string;
-        name: string;
-        email: string;
-        totalHours: number;
-        expectedHours: number;
-        completionPercentage: number;
-    }[];
+    incompleteEmployeesList: EmployeeMetrics[];
+    completeEmployeesList: EmployeeMetrics[];
 }
 
 async function fetchAggregatedMetrics(

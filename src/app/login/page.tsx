@@ -11,7 +11,6 @@ import {
     CardContent,
     CardDescription,
     CardHeader,
-    CardTitle,
 } from "@/components/ui/card";
 import { LoginType } from "@/types";
 import { Clock, Users, Shield } from "lucide-react";
@@ -23,7 +22,7 @@ function LoginForm() {
     const error = searchParams.get("error");
 
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [fmno, setFmno] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<LoginType>("employee");
     const [loginError, setLoginError] = useState<string | null>(
@@ -37,7 +36,7 @@ function LoginForm() {
         try {
             const result = await signIn("credentials", {
                 email,
-                password,
+                fmno,
                 loginType: activeTab,
                 redirect: false,
             });
@@ -46,7 +45,7 @@ function LoginForm() {
                 if (result.error.includes("Admin role required")) {
                     setLoginError("Access denied: You don't have admin privileges");
                 } else {
-                    setLoginError("Invalid email or password");
+                    setLoginError("Invalid email or FMNO");
                 }
                 setIsLoading(false);
                 return;
@@ -83,8 +82,8 @@ function LoginForm() {
                             <button
                                 onClick={() => setActiveTab("employee")}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${activeTab === "employee"
-                                        ? "bg-white text-gray-900 shadow-sm"
-                                        : "text-gray-600 hover:text-gray-900"
+                                    ? "bg-white text-gray-900 shadow-sm"
+                                    : "text-gray-600 hover:text-gray-900"
                                     }`}
                             >
                                 <Users className="h-4 w-4" />
@@ -93,8 +92,8 @@ function LoginForm() {
                             <button
                                 onClick={() => setActiveTab("admin")}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${activeTab === "admin"
-                                        ? "bg-white text-gray-900 shadow-sm"
-                                        : "text-gray-600 hover:text-gray-900"
+                                    ? "bg-white text-gray-900 shadow-sm"
+                                    : "text-gray-600 hover:text-gray-900"
                                     }`}
                             >
                                 <Shield className="h-4 w-4" />
@@ -121,7 +120,7 @@ function LoginForm() {
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="you@company.com"
+                                placeholder="your_name@mckinsey.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="border-gray-200 focus:border-blue-500 focus:ring-blue-500"
@@ -130,19 +129,21 @@ function LoginForm() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="password" className="text-gray-700">
-                                Password
+                            <Label htmlFor="fmno" className="text-gray-700">
+                                FMNO
                             </Label>
                             <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                id="fmno"
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                placeholder="123456"
+                                value={fmno}
+                                onChange={(e) => setFmno(e.target.value.replace(/\D/g, ""))}
                                 className="border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                 disabled={isLoading}
                                 onKeyDown={(e) => {
-                                    if (e.key === "Enter" && email && password) {
+                                    if (e.key === "Enter" && email && fmno) {
                                         handleLogin();
                                     }
                                 }}
@@ -152,7 +153,7 @@ function LoginForm() {
                         <Button
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-5"
                             onClick={handleLogin}
-                            disabled={isLoading || !email || !password}
+                            disabled={isLoading || !email || !fmno}
                         >
                             {isLoading ? (
                                 <div className="flex items-center gap-2">
@@ -185,7 +186,7 @@ function LoginForm() {
                 </Card>
 
                 <p className="text-center text-sm text-gray-400 mt-6">
-                    © 2024 Timesheet System
+                    © 2026 Timesheet System
                 </p>
             </div>
         </div>

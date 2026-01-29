@@ -1,6 +1,6 @@
-email,name,password
-john@company.com,John Doe,password123
-jane@company.com,Jane Smith,password123
-mike@company.com,Mike Johnson,password123
-sarah@company.com,Sarah Williams,password123
-david@company.com,David Brown,password123
+email,name,fmno
+john@mckinsey.com,John Doe,123456
+jane@mckinsey.com,Jane Smith,234567
+mike@mckinsey.com,Mike Johnson,345678
+sarah@mckinsey.com,Sarah Williams,456789
+david@mckinsey.com,David Brown,567890

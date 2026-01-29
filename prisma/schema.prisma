@@ -18,7 +18,7 @@ enum Role {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  passwordHash  String    @map("password_hash")
+  fmno          String    @unique  // Numerical employee ID (visible, not hidden like password)
   name          String?
   roles         Role[]    @default([EMPLOYEE])
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -26,6 +26,7 @@ model User {
 
   timeEntries           TimeEntry[]
   chargeCodeAccess      EmployeeChargeCodeAccess[]
+  periodChargeCodes     UserPeriodChargeCode[]
 
   @@map("users")
 }
@@ -38,8 +39,9 @@ model ChargeCode {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  timeEntries       TimeEntry[]
-  employeeAccess    EmployeeChargeCodeAccess[]
+  timeEntries         TimeEntry[]
+  employeeAccess      EmployeeChargeCodeAccess[]
+  userPeriodCodes     UserPeriodChargeCode[]
 
   @@map("charge_codes")
 }
@@ -59,6 +61,22 @@ model EmployeeChargeCodeAccess {
   @@map("employee_charge_code_access")
 }
 
+// Store which charge codes a user has added for each period (independent per period)
+model UserPeriodChargeCode {
+  id            String     @id @default(cuid())
+  userId        String     @map("user_id")
+  chargeCodeId  String     @map("charge_code_id")
+  periodStart   DateTime   @db.Date @map("period_start")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chargeCode  ChargeCode @relation(fields: [chargeCodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chargeCodeId, periodStart])
+  @@index([userId, periodStart])
+  @@map("user_period_charge_codes")
+}
+
 model TimeEntry {
   id            String     @id @default(cuid())
   userId        String     @map("user_id")
@@ -74,4 +92,14 @@ model TimeEntry {
   @@unique([userId, chargeCodeId, date])
   @@index([userId, date])
   @@map("time_entries")
+}
+
+// Admin settings for period restrictions
+model AdminSettings {
+  id                    String    @id @default(cuid())
+  oldestEditablePeriod  DateTime? @db.Date @map("oldest_editable_period")
+  latestEditablePeriod  DateTime? @db.Date @map("latest_editable_period")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@map("admin_settings")
 }

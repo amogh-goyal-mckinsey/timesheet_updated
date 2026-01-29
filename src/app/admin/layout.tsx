@@ -11,7 +11,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, Cog } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,11 @@ const navItems = [
         href: "/admin/dashboard",
         label: "Dashboard",
         icon: LayoutDashboard,
+    },
+    {
+        href: "/admin/manage",
+        label: "Manage",
+        icon: Cog,
     },
 ];
 

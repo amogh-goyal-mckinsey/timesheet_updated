@@ -106,6 +106,9 @@ export default function AdminDashboardPage() {
     const [periodStart, setPeriodStart] = useState(initialPeriod.start);
     const [periodEnd, setPeriodEnd] = useState(initialPeriod.end);
 
+    // Employee filter state
+    const [employeeFilter, setEmployeeFilter] = useState<"all" | "complete" | "incomplete">("all");
+
     const { data, isLoading, error } = useAggregatedMetrics(periodStart, periodEnd);
 
     const handlePreviousPeriod = () => {
@@ -125,6 +128,23 @@ export default function AdminDashboardPage() {
         setPeriodStart(current.start);
         setPeriodEnd(current.end);
     };
+
+    // Filtered employees based on filter selection
+    const filteredEmployees = useMemo(() => {
+        if (!data) return [];
+
+        if (employeeFilter === "complete") {
+            return data.completeEmployeesList || [];
+        } else if (employeeFilter === "incomplete") {
+            return data.incompleteEmployeesList || [];
+        } else {
+            // All - combine both lists
+            return [
+                ...(data.completeEmployeesList || []),
+                ...(data.incompleteEmployeesList || []),
+            ].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        }
+    }, [data, employeeFilter]);
 
     // Chart colors
     const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"];
@@ -360,22 +380,48 @@ export default function AdminDashboardPage() {
                 </Card>
             </div>
 
-            {/* Incomplete Employees Table */}
+            {/* Employees Table */}
             <Card className="bg-white border-gray-200">
                 <CardHeader>
-                    <div className="flex items-center gap-2">
-                        <AlertCircle className="h-5 w-5 text-orange-500" />
-                        <CardTitle className="text-gray-900">Incomplete Timesheets</CardTitle>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Users className="h-5 w-5 text-blue-600" />
+                            <CardTitle className="text-gray-900">Employee Timesheets</CardTitle>
+                        </div>
+                        <select
+                            value={employeeFilter}
+                            onChange={(e) => setEmployeeFilter(e.target.value as "all" | "complete" | "incomplete")}
+                            className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">All Employees</option>
+                            <option value="complete">Complete</option>
+                            <option value="incomplete">Incomplete</option>
+                        </select>
                     </div>
                     <CardDescription className="text-gray-500">
-                        Employees who haven&apos;t completed their timesheets for the selected period
+                        {employeeFilter === "all"
+                            ? "All employees for the selected period"
+                            : employeeFilter === "complete"
+                                ? "Employees who have completed their timesheets"
+                                : "Employees who haven't completed their timesheets"}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {data?.incompleteEmployeesList.length === 0 ? (
+                    {filteredEmployees.length === 0 ? (
                         <div className="text-center py-8 text-gray-400">
-                            <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
-                            <p>All employees have completed their timesheets!</p>
+                            {employeeFilter === "incomplete" ? (
+                                <>
+                                    <CheckCircle className="h-12 w-12 mx-auto mb-2 text-green-500" />
+                                    <p>All employees have completed their timesheets!</p>
+                                </>
+                            ) : employeeFilter === "complete" ? (
+                                <>
+                                    <AlertCircle className="h-12 w-12 mx-auto mb-2 text-orange-500" />
+                                    <p>No employees have completed their timesheets yet.</p>
+                                </>
+                            ) : (
+                                <p>No employees found.</p>
+                            )}
                         </div>
                     ) : (
                         <Table>
@@ -385,11 +431,11 @@ export default function AdminDashboardPage() {
                                     <TableHead className="text-gray-600">Email</TableHead>
                                     <TableHead className="text-right text-gray-600">Hours Logged</TableHead>
                                     <TableHead className="text-right text-gray-600">Expected</TableHead>
-                                    <TableHead className="text-right text-gray-600">Completion</TableHead>
+                                    <TableHead className="text-right text-gray-600">Status</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {data?.incompleteEmployeesList.map((employee) => (
+                                {filteredEmployees.map((employee) => (
                                     <TableRow key={employee.id}>
                                         <TableCell className="font-medium text-gray-900">
                                             {employee.name}
@@ -405,22 +451,17 @@ export default function AdminDashboardPage() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <Badge
-                                                variant={
-                                                    employee.completionPercentage >= 75
-                                                        ? "default"
-                                                        : employee.completionPercentage >= 50
-                                                            ? "secondary"
-                                                            : "destructive"
-                                                }
                                                 className={
-                                                    employee.completionPercentage >= 75
-                                                        ? "bg-orange-100 text-orange-700"
-                                                        : employee.completionPercentage >= 50
-                                                            ? "bg-yellow-100 text-yellow-700"
-                                                            : "bg-red-100 text-red-700"
+                                                    employee.isComplete
+                                                        ? "bg-green-100 text-green-700"
+                                                        : employee.completionPercentage >= 75
+                                                            ? "bg-orange-100 text-orange-700"
+                                                            : employee.completionPercentage >= 50
+                                                                ? "bg-yellow-100 text-yellow-700"
+                                                                : "bg-red-100 text-red-700"
                                                 }
                                             >
-                                                {employee.completionPercentage}%
+                                                {employee.isComplete ? "Complete" : `${employee.completionPercentage}%`}
                                             </Badge>
                                         </TableCell>
                                     </TableRow>

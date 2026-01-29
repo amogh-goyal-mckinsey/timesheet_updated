@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Popover,
     PopoverContent,
@@ -29,6 +30,17 @@ export function HourPicker({
     isWeekend = false,
 }: HourPickerProps) {
     const [open, setOpen] = useState(false);
+    const [inputValue, setInputValue] = useState("");
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // Sync input value when popover opens
+    useEffect(() => {
+        if (open && inputRef.current) {
+            setInputValue(value !== null && value !== undefined ? value.toString() : "");
+            // Focus the input after a short delay
+            setTimeout(() => inputRef.current?.focus(), 50);
+        }
+    }, [open, value]);
 
     const handleSelect = (hours: number) => {
         onChange(hours);
@@ -38,6 +50,32 @@ export function HourPicker({
     const handleClear = () => {
         onChange(null);
         setOpen(false);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value.replace(/\D/g, "");
+        setInputValue(val);
+
+        // Auto-apply if valid
+        const numVal = parseInt(val, 10);
+        if (numVal >= 1 && numVal <= 7 && numVal <= maxHours) {
+            onChange(numVal);
+        }
+    };
+
+    const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            const numVal = parseInt(inputValue, 10);
+            if (numVal >= 1 && numVal <= 7 && numVal <= maxHours) {
+                onChange(numVal);
+                setOpen(false);
+            } else if (inputValue === "" || inputValue === "0") {
+                onChange(null);
+                setOpen(false);
+            }
+        } else if (e.key === "Escape") {
+            setOpen(false);
+        }
     };
 
     const getDisplayValue = () => {
@@ -52,11 +90,9 @@ export function HourPicker({
         if (value === null || value === undefined) {
             return "text-gray-400 hover:text-gray-600 hover:bg-gray-100";
         }
+        // All values show as blue (per user request - no red/orange for 4-6)
         if (value === 7) {
             return "text-green-600 bg-green-50 hover:bg-green-100";
-        }
-        if (value >= 4) {
-            return "text-orange-600 bg-orange-50 hover:bg-orange-100";
         }
         return "text-blue-600 bg-blue-50 hover:bg-blue-100";
     };
@@ -86,6 +122,22 @@ export function HourPicker({
                 align="center"
                 sideOffset={4}
             >
+                {/* Type input */}
+                <div className="mb-2">
+                    <Input
+                        ref={inputRef}
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Type 1-7"
+                        value={inputValue}
+                        onChange={handleInputChange}
+                        onKeyDown={handleInputKeyDown}
+                        className="h-9 text-center text-sm border-gray-200"
+                        maxLength={1}
+                    />
+                </div>
+
+                {/* Button grid */}
                 <div className="grid grid-cols-4 gap-1">
                     {HOURS.map((hour) => {
                         const hourDisabled = isHourDisabled(hour);
@@ -127,7 +179,7 @@ export function HourPicker({
                 )}
                 {maxHours >= 7 && (
                     <p className="text-xs text-gray-400 text-center mt-2">
-                        Select hours (1-7)
+                        Type or click to select hours (1-7)
                     </p>
                 )}
             </PopoverContent>

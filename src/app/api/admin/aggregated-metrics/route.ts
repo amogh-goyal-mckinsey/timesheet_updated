@@ -156,10 +156,28 @@ export async function GET(request: NextRequest) {
                     totalHours,
                     expectedHours,
                     completionPercentage: expectedHours > 0 ? Math.round((totalHours / expectedHours) * 100) : 0,
+                    isComplete: totalHours >= expectedHours,
                 };
             })
             .filter((emp) => emp.totalHours < expectedHours)
             .sort((a, b) => a.completionPercentage - b.completionPercentage);
+
+        // Identify complete employees
+        const completeEmployeesList = employees
+            .map((emp) => {
+                const totalHours = hoursPerEmployee.get(emp.id) || 0;
+                return {
+                    id: emp.id,
+                    name: emp.name,
+                    email: emp.email,
+                    totalHours,
+                    expectedHours,
+                    completionPercentage: expectedHours > 0 ? Math.round((totalHours / expectedHours) * 100) : 0,
+                    isComplete: totalHours >= expectedHours,
+                };
+            })
+            .filter((emp) => emp.totalHours >= expectedHours)
+            .sort((a, b) => b.totalHours - a.totalHours);
 
         // 3. Summary metrics
         const totalEmployees = employees.length;
@@ -233,6 +251,7 @@ export async function GET(request: NextRequest) {
             },
             chargeCodeBreakdown: chargeCodeData,
             incompleteEmployeesList: incompleteEmployees,
+            completeEmployeesList: completeEmployeesList,
         });
     } catch (error) {
         console.error("Error fetching admin metrics:", error);

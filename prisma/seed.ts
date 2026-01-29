@@ -1,5 +1,4 @@
 import { PrismaClient, Role } from "@prisma/client";
-import { hash } from "bcryptjs";
 import { parse } from "csv-parse/sync";
 import * as fs from "fs";
 import * as path from "path";
@@ -9,13 +8,13 @@ const prisma = new PrismaClient();
 interface EmployeeRow {
     email: string;
     name: string;
-    password: string;
+    fmno: string;
 }
 
 interface AdminRow {
     email: string;
     name: string;
-    password: string;
+    fmno: string;
 }
 
 interface ChargeCodeRow {
@@ -74,7 +73,6 @@ async function main() {
     // Create employees
     console.log("👤 Creating employees...");
     for (const employee of employees) {
-        const passwordHash = await hash(employee.password, 12);
         const isAlsoAdmin = adminEmails.has(employee.email.toLowerCase());
 
         const roles: Role[] = isAlsoAdmin ? [Role.EMPLOYEE, Role.ADMIN] : [Role.EMPLOYEE];
@@ -83,17 +81,17 @@ async function main() {
             where: { email: employee.email },
             update: {
                 name: employee.name,
-                passwordHash,
+                fmno: employee.fmno,
                 roles,
             },
             create: {
                 email: employee.email,
                 name: employee.name,
-                passwordHash,
+                fmno: employee.fmno,
                 roles,
             },
         });
-        console.log(`   ✅ ${employee.email} (${roles.join(", ")})`);
+        console.log(`   ✅ ${employee.email} | FMNO: ${employee.fmno} | (${roles.join(", ")})`);
     }
     console.log("");
 
@@ -102,7 +100,6 @@ async function main() {
     const employeeEmails = new Set(employees.map(e => e.email.toLowerCase()));
 
     for (const admin of admins) {
-        const passwordHash = await hash(admin.password, 12);
         const isAlsoEmployee = employeeEmails.has(admin.email.toLowerCase());
 
         if (isAlsoEmployee) {
@@ -115,17 +112,33 @@ async function main() {
             where: { email: admin.email },
             update: {
                 name: admin.name,
-                passwordHash,
+                fmno: admin.fmno,
                 roles: [Role.ADMIN],
             },
             create: {
                 email: admin.email,
                 name: admin.name,
-                passwordHash,
+                fmno: admin.fmno,
                 roles: [Role.ADMIN],
             },
         });
-        console.log(`   ✅ ${admin.email} (ADMIN)`);
+        console.log(`   ✅ ${admin.email} | FMNO: ${admin.fmno} | (ADMIN)`);
+    }
+    console.log("");
+
+    // Create default admin settings if not exist
+    console.log("⚙️ Creating admin settings...");
+    const existingSettings = await prisma.adminSettings.findFirst();
+    if (!existingSettings) {
+        await prisma.adminSettings.create({
+            data: {
+                oldestEditablePeriod: null, // No restriction by default
+                latestEditablePeriod: null, // No restriction by default
+            },
+        });
+        console.log("   ✅ Default admin settings created");
+    } else {
+        console.log("   ⏭️ Admin settings already exist");
     }
     console.log("");
 
@@ -135,13 +148,13 @@ async function main() {
     console.log("   Employees:");
     for (const emp of employees) {
         const isAdmin = adminEmails.has(emp.email.toLowerCase());
-        console.log(`   - ${emp.email} / ${emp.password}${isAdmin ? " (also ADMIN)" : ""}`);
+        console.log(`   - ${emp.email} | FMNO: ${emp.fmno}${isAdmin ? " (also ADMIN)" : ""}`);
     }
     console.log("");
     console.log("   Admins (admin-only):");
     for (const admin of admins) {
         if (!employeeEmails.has(admin.email.toLowerCase())) {
-            console.log(`   - ${admin.email} / ${admin.password}`);
+            console.log(`   - ${admin.email} | FMNO: ${admin.fmno}`);
         }
     }
 }
