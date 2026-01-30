@@ -1,11 +1,4 @@
 code,description,isActive
-PROJ-001,Client Project Alpha - Development,true
-PROJ-002,Client Project Beta - Design,true
-PROJ-003,Internal Tools Development,true
-ADMIN-001,Administrative Tasks,true
-TRAIN-001,Training & Learning,true
-MTG-001,Meetings & Collaboration,true
-SUPP-001,Customer Support,true
-RND-001,Research & Development,true
-PROJ-004,Client Project Gamma - Testing,true
-PROJ-005,Client Project Delta - Documentation,true
+TRAINING-001,Training & Learning,true
+T-SOFTWARE-DEL-001,Training & Learning,true
+T-PRODUCT-DEV-001,Training & Learning,true

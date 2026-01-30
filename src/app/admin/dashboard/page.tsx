@@ -258,16 +258,16 @@ export default function AdminDashboardPage() {
                 <Card className="bg-white border-gray-200">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-sm font-medium text-gray-500">
-                            Avg Hours/Employee
+                            Employee Utilization
                         </CardTitle>
                         <Clock className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-gray-900">
-                            {data?.summary.averageHoursPerEmployee || 0}
+                            {parseFloat(((data?.summary.averageHoursPerEmployee || 0) / (data?.period.expectedHoursPerEmployee || 70) * 100).toFixed(2))}%
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                            Expected: {data?.period.expectedHoursPerEmployee || 70} hrs
+                            Maximum: {100}%
                         </p>
                     </CardContent>
                 </Card>
